@@ -8,5 +8,11 @@
   </head>
   <body>
     <h1>CO2-Emissions</h1>
+    <form action="/" method="get">
+      <input type="checkbox" id="per_capita" name="per_capita">
+      <label for="per_capita">Per capita</label>
+      <button type="submit">Refresh</button>
+    </form>
+    <iframe height="500" width="500" src="/countries_sorted?per_capita={{ per_capita }}&num={{ num }}"></iframe>
   </body>
 </html>

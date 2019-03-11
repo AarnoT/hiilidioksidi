@@ -11,6 +11,8 @@ import zipfile
 import pandas as pd
 import requests
 
+pd.set_option('display.float_format', lambda x: '%.3f' % x)
+
 POPULATION_URL = 'http://api.worldbank.org/v2/en/indicator/SP.POP.TOTL?downloadformat=csv'
 CO2_URL = 'http://api.worldbank.org/v2/en/indicator/EN.ATM.CO2E.KT?downloadformat=csv'
 
