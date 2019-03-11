@@ -21,7 +21,7 @@ config = {
     },
     'root' : {
         'level' : 'INFO',
-        'handlers' : ['wsgi', 'file']
+        'handlers' : ['wsgi']
     }
 }
 
