@@ -5,6 +5,7 @@
 
 import logging
 from logging.config import dictConfig
+import os
 import threading
 
 from flask import Flask, render_template, request
@@ -37,5 +38,5 @@ if __name__ == '__main__':
     thread.start()
 
     logging.info('Starting app')
-    app.run()
+    app.run(port=int(os.environ.get('PORT', 5000)))
 
