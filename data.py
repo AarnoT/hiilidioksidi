@@ -18,8 +18,9 @@ CO2_URL = 'http://api.worldbank.org/v2/en/indicator/EN.ATM.CO2E.KT?downloadforma
 data_lock = threading.Lock()
 
 # Data is in pandas data frames.
-population_data = None
 co2_data = None
+co2_data_per_capita = None
+latest_data_year = ''
 
 # Previous data update time in Unix time format.
 last_update_time = 0
@@ -79,6 +80,42 @@ def fetch_and_decode_data(url):
     return True, data
 
 
+def preprocess_data(popdata, co2data):
+    '''Create data frames with absolute and per capita CO2 values.
+
+    Data is sorted by the most recent year with less than 20 missing
+    values.
+
+    Arguments:
+      popdata : pandas.DataFrame
+      co2data : pandas.DataFrame
+    Returns:
+      data : pandas.DataFrame
+      data_per_capita : pandas.DataFrame
+      sort_year : string
+        Year used to sort data
+    '''
+    sort_year = popdata.columns[-1]
+    for column in popdata.columns[:3:-1]:
+        na_count1 = popdata[column].value_counts(dropna=False)[float('NaN')]
+        na_count2 = co2data[column].value_counts(dropna=False)[float('NaN')]
+        if na_count1 < 20 and na_count2 < 20:
+            sort_year = column
+            break
+
+    countries = popdata['Country Name']
+    co2data = co2data.drop(co2data.columns[:4], axis=1)
+    popdata = popdata.drop(popdata.columns[:4], axis=1)
+    data = co2data
+    data_per_capita = co2data / popdata
+    data.insert(loc=0, column='Country', value=countries)
+    data_per_capita.insert(loc=0, column='Country', value=countries)
+    data.sort_values(sort_year, inplace=True, ascending=False)
+    data_per_capita.sort_values(sort_year, inplace=True, ascending=False)
+
+    return data, data_per_capita, sort_year
+
+
 def update_data():
     '''Fetch and update data.
 
@@ -89,6 +126,8 @@ def update_data():
     ok1, data1 = fetch_and_decode_data(POPULATION_URL)
     ok2, data2 = fetch_and_decode_data(CO2_URL)
 
+    data, data_per_capita, year = preprocess_data(data1, data2)
+
     global last_update_time
     last_update_time = time.time()
 
@@ -97,9 +136,10 @@ def update_data():
         return
 
     with data_lock:
-        global population_data, co2_data
-        population_data = data1
-        co2_data = data2
+        global co2_data, co2_data_per_capita, latest_data_year
+        co2_data = data
+        co2_data_per_capita = data_per_capita
+        latest_data_year = year
     logging.info('Updating data done')
 
 
